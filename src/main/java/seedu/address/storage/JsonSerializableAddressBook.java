@@ -108,7 +108,8 @@ class JsonSerializableAddressBook {
 
         // Log warning if limit was exceeded
         if (limitExceeded) {
-            String limitWarning = MESSAGE_ENTRY_LIMIT_EXCEEDED + " Skipped " + skippedDueToLimit + " entries beyond limit.";
+            String limitWarning = MESSAGE_ENTRY_LIMIT_EXCEEDED + " Skipped " + skippedDueToLimit
+                    + " entries beyond limit.";
             logger.warning(limitWarning);
             warningMessages.add(limitWarning);
         }

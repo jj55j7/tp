@@ -68,57 +68,56 @@ public class MainWindow extends UiPart<Stage> {
 
         helpWindow = new HelpWindow();
 
-        // Display storage warnings after UI is initialized
-        displayStorageWarnings();
+        // DON'T call displayStorageWarnings here - resultDisplay is not initialized yet!
     }
 
     /**
      * Displays storage warnings from data loading process
      */
     private void displayStorageWarnings() {
-        // Get the model from logic - you might need to adjust this based on your architecture
-        // If you can't access model directly from logic, you might need to modify Logic interface
         List<String> warnings = logic.getStorageWarnings();
 
         if (warnings != null && !warnings.isEmpty()) {
             StringBuilder warningMessage = new StringBuilder();
-            warningMessage.append("Data loading completed with the following warnings:\n\n");
+            warningMessage.append("DATA LOADING WARNINGS:\n\n");
+
+            // Count different types of issues
+            int duplicates = 0;
+            int invalid = 0;
+            int limitExceeded = 0;
 
             for (String warning : warnings) {
-                warningMessage.append("• ").append(warning).append("\n");
+                if (warning.contains("DUPLICATE")) {
+                    duplicates++;
+                } else if (warning.contains("INVALID")) {
+                    invalid++;
+                } else if (warning.contains("Entry limit exceeded")) {
+                    limitExceeded++;
+                }
             }
 
-            warningMessage.append("\nPlease check the logs for more details.");
+            // Build summary message
+            if (limitExceeded > 0) {
+                warningMessage.append("Entry limit exceeded! Only first 250 entries loaded.\n");
+            }
+            if (duplicates > 0) {
+                warningMessage.append(duplicates)
+                        .append(" duplicate entries skipped (same name + phone)\n");
+            }
+            if (invalid > 0) {
+                warningMessage.append(invalid)
+                        .append(" invalid entries skipped (format errors)\n");
+            }
 
             // Display in result display
             resultDisplay.setFeedbackToUser(warningMessage.toString());
+            logger.info("Displayed storage warnings in UI: " + duplicates + " duplicates, "
+                    + invalid + " invalid, " + (limitExceeded > 0 ? "limit exceeded" : "no limit issues"));
 
             // Clear warnings after displaying
             logic.clearStorageWarnings();
         }
     }
-
-    //    /**
-    //     * Displays storage warnings from data loading process
-    //     */
-    //    private void displayStorageWarnings() {
-    //        // This would need to be called after the UI components are initialized
-    //        // You might need to modify this based on your exact setup
-    //        java.util.List<String> warnings = seedu.address.model.StorageWarnings.getAndClearPendingWarnings();
-    //        if (!warnings.isEmpty()) {
-    //            StringBuilder warningMessage = new StringBuilder();
-    //            warningMessage.append("Data loading completed with the following warnings:\n\n");
-    //
-    //            for (String warning : warnings) {
-    //                warningMessage.append("• ").append(warning).append("\n");
-    //            }
-    //
-    //            warningMessage.append("\nPlease check the logs for more details.");
-    //
-    //            // Display in result display
-    //            resultDisplay.setFeedbackToUser(warningMessage.toString());
-    //        }
-    //    }
 
     public Stage getPrimaryStage() {
         return primaryStage;
@@ -174,7 +173,7 @@ public class MainWindow extends UiPart<Stage> {
         CommandBox commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
 
-        // Display storage warnings after UI is fully set up
+        // NOW display storage warnings - resultDisplay is initialized!
         displayStorageWarnings();
     }
 

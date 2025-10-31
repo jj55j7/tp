@@ -2,7 +2,6 @@ package seedu.address;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -22,7 +21,6 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
-import seedu.address.model.StorageWarnings;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.AddressBookStorage;
@@ -83,8 +81,7 @@ public class MainApp extends Application {
 
         Optional<ReadOnlyAddressBook> addressBookOptional;
         ReadOnlyAddressBook initialData;
-        boolean shouldSaveData = false; // Track if data needs to be saved
-        List<String> storageWarnings = new ArrayList<>(); // Store warnings locally
+        boolean shouldSaveData = false;
 
         try {
             addressBookOptional = storage.readAddressBook();
@@ -94,21 +91,18 @@ public class MainApp extends Application {
                 logger.info("Creating a new data file " + storage.getAddressBookFilePath()
                         + " populated with a sample AddressBook.");
                 initialData = SampleDataUtil.getSampleAddressBook();
-                shouldSaveData = true; // MUST save to create the file
+                shouldSaveData = true;
             } else {
-                // File exists - use loaded data and save to clean duplicates/invalid entries
+                // File exists - use loaded data
                 initialData = addressBookOptional.get();
                 shouldSaveData = true; // Save to clean any duplicates/invalid entries
-
-                // Display storage warnings in UI
-                displayStorageWarnings(initialData.getStorageWarnings());
             }
 
         } catch (DataLoadingException e) {
             logger.warning("Data file at " + storage.getAddressBookFilePath() + " could not be loaded."
                     + " Will be starting with an empty AddressBook.");
             initialData = new AddressBook();
-            shouldSaveData = true; // Save empty address book to create valid file
+            shouldSaveData = true;
         }
 
         // Save the data immediately to ensure:
@@ -128,24 +122,87 @@ public class MainApp extends Application {
             }
         }
 
-        // Create model and set warnings
+        // Create model with the loaded data and its warnings
         ModelManager modelManager = new ModelManager(initialData, userPrefs);
-        if (!storageWarnings.isEmpty()) {
-            modelManager.setStorageWarnings(storageWarnings);
-        }
 
-        return new ModelManager(initialData, userPrefs);
-    }
-
-    /**
-     * Displays storage warnings in the application UI
-     */
-    private void displayStorageWarnings(List<String> warnings) {
+        // Transfer warnings from AddressBook to Model
+        List<String> warnings = initialData.getStorageWarnings();
         if (warnings != null && !warnings.isEmpty()) {
-            // Store warnings to be displayed when UI is ready
-            StorageWarnings.setPendingWarnings(warnings);
+            modelManager.setStorageWarnings(warnings);
+            logger.info("Stored " + warnings.size() + " warnings in model for UI display");
         }
+
+        return modelManager;
     }
+
+    //    /**
+    //     * Returns a {@code ModelManager} with the data from {@code storage}'s address book and
+    //     {@code userPrefs}. <br>
+    //     * The data from the sample address book will be used instead if {@code storage}'s address book is not found,
+    //     * or an empty address book will be used instead if errors occur when reading {@code storage}'s address book.
+    //     */
+    //    private Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
+    //        logger.info("Using data file : " + storage.getAddressBookFilePath());
+    //
+    //        // Ensure data directory exists first, before any read/write operations
+    //        ensureDataDirectoryExists(storage.getAddressBookFilePath());
+    //
+    //        Optional<ReadOnlyAddressBook> addressBookOptional;
+    //        ReadOnlyAddressBook initialData;
+    //        boolean shouldSaveData = false; // Track if data needs to be saved
+    //        List<String> storageWarnings = new ArrayList<>(); // Store warnings locally
+    //
+    //        try {
+    //            addressBookOptional = storage.readAddressBook();
+    //
+    //            if (!addressBookOptional.isPresent()) {
+    //                // No existing file - use sample data and MUST save it
+    //                logger.info("Creating a new data file " + storage.getAddressBookFilePath()
+    //                        + " populated with a sample AddressBook.");
+    //                initialData = SampleDataUtil.getSampleAddressBook();
+    //                shouldSaveData = true; // MUST save to create the file
+    //            } else {
+    //                // File exists - use loaded data and save to clean duplicates/invalid entries
+    //                initialData = addressBookOptional.get();
+    //                shouldSaveData = true; // Save to clean any duplicates/invalid entries
+    //
+    //                // Display storage warnings in UI
+    //                displayStorageWarnings(initialData.getStorageWarnings());
+    //            }
+    //
+    //        } catch (DataLoadingException e) {
+    //            logger.warning("Data file at " + storage.getAddressBookFilePath() + " could not be loaded."
+    //                    + " Will be starting with an empty AddressBook.");
+    //            initialData = new AddressBook();
+    //            shouldSaveData = true; // Save empty address book to create valid file
+    //        }
+    //
+    //        // Save the data immediately to ensure:
+    //        // 1. File and folder are created
+    //        // 2. Sample data is persisted
+    //        // 3. Duplicates/invalid entries are cleaned
+    //        if (shouldSaveData) {
+    //            try {
+    //                storage.saveAddressBook(initialData);
+    //                logger.info("Data has been saved to file: " + storage.getAddressBookFilePath());
+    //                int personCount = initialData.getPersonList().size();
+    //                if (personCount >= 250) {
+    //                    logger.info("Address book is at or near capacity (" + personCount + "/250 entries)");
+    //                }
+    //            } catch (IOException e) {
+    //                logger.warning("Failed to save data to file: " + StringUtil.getDetails(e));
+    //            }
+    //        }
+    //
+    //        // Create model and set warnings
+    //        ModelManager modelManager = new ModelManager(initialData, userPrefs);
+    //        if (!storageWarnings.isEmpty()) {
+    //            modelManager.setStorageWarnings(storageWarnings);
+    //        }
+    //
+    //        return new ModelManager(initialData, userPrefs);
+    //    }
+
 
     /**
      * Ensures the data directory exists. Creates it if necessary.
