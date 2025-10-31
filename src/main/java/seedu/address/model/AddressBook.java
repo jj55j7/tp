@@ -2,6 +2,7 @@ package seedu.address.model;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -17,6 +18,8 @@ import seedu.address.model.person.UniquePersonList;
 public class AddressBook implements ReadOnlyAddressBook {
 
     private final UniquePersonList persons;
+
+    private final List<String> storageWarnings = new ArrayList<>();
 
     /*
      * The 'unusual' code block below is a non-static initialization block, sometimes used to avoid duplication
@@ -131,5 +134,27 @@ public class AddressBook implements ReadOnlyAddressBook {
     @Override
     public int hashCode() {
         return persons.hashCode();
+    }
+
+    /**
+     * Sets storage warnings from data loading process
+     */
+    public void setStorageWarnings(List<String> warnings) {
+        storageWarnings.clear();
+        storageWarnings.addAll(warnings);
+    }
+
+    /**
+     * Gets storage warnings from data loading process
+     */
+    public List<String> getStorageWarnings() {
+        return new ArrayList<>(storageWarnings);
+    }
+
+    /**
+     * Clears storage warnings
+     */
+    public void clearStorageWarnings() {
+        storageWarnings.clear();
     }
 }

@@ -1,5 +1,6 @@
 package seedu.address.ui;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
@@ -66,7 +67,58 @@ public class MainWindow extends UiPart<Stage> {
         setAccelerators();
 
         helpWindow = new HelpWindow();
+
+        // Display storage warnings after UI is initialized
+        displayStorageWarnings();
     }
+
+    /**
+     * Displays storage warnings from data loading process
+     */
+    private void displayStorageWarnings() {
+        // Get the model from logic - you might need to adjust this based on your architecture
+        // If you can't access model directly from logic, you might need to modify Logic interface
+        List<String> warnings = logic.getStorageWarnings();
+
+        if (warnings != null && !warnings.isEmpty()) {
+            StringBuilder warningMessage = new StringBuilder();
+            warningMessage.append("Data loading completed with the following warnings:\n\n");
+
+            for (String warning : warnings) {
+                warningMessage.append("• ").append(warning).append("\n");
+            }
+
+            warningMessage.append("\nPlease check the logs for more details.");
+
+            // Display in result display
+            resultDisplay.setFeedbackToUser(warningMessage.toString());
+
+            // Clear warnings after displaying
+            logic.clearStorageWarnings();
+        }
+    }
+
+    //    /**
+    //     * Displays storage warnings from data loading process
+    //     */
+    //    private void displayStorageWarnings() {
+    //        // This would need to be called after the UI components are initialized
+    //        // You might need to modify this based on your exact setup
+    //        java.util.List<String> warnings = seedu.address.model.StorageWarnings.getAndClearPendingWarnings();
+    //        if (!warnings.isEmpty()) {
+    //            StringBuilder warningMessage = new StringBuilder();
+    //            warningMessage.append("Data loading completed with the following warnings:\n\n");
+    //
+    //            for (String warning : warnings) {
+    //                warningMessage.append("• ").append(warning).append("\n");
+    //            }
+    //
+    //            warningMessage.append("\nPlease check the logs for more details.");
+    //
+    //            // Display in result display
+    //            resultDisplay.setFeedbackToUser(warningMessage.toString());
+    //        }
+    //    }
 
     public Stage getPrimaryStage() {
         return primaryStage;
@@ -121,6 +173,9 @@ public class MainWindow extends UiPart<Stage> {
 
         CommandBox commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+
+        // Display storage warnings after UI is fully set up
+        displayStorageWarnings();
     }
 
     /**

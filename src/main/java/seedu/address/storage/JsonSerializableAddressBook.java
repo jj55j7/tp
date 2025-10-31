@@ -63,6 +63,9 @@ class JsonSerializableAddressBook {
         int skippedDueToLimit = 0;
         boolean limitExceeded = false;
 
+        // Create lists to store warning messages
+        List<String> warningMessages = new ArrayList<>();
+
         for (JsonAdaptedPerson jsonAdaptedPerson : persons) {
             entryNumber++;
             // Check if reached the limit
@@ -77,8 +80,10 @@ class JsonSerializableAddressBook {
 
                 if (hasDuplicatePhoneName(addressBook, person)) {
                     duplicateCount++;
-                    logger.warning("[Entry " + entryNumber + "] DUPLICATE SKIPPED - Name: '" + person.getName()
-                            + "', Phone: '" + person.getPhone() + "' - Same phone+name combination exists");
+                    String warningMsg = "[Entry " + entryNumber + "] DUPLICATE SKIPPED - Name: '" + person.getName()
+                            + "', Phone: '" + person.getPhone() + "' - Same phone+name combination exists";
+                    logger.warning(warningMsg);
+                    warningMessages.add(warningMsg);
                     continue;
                 }
 
@@ -89,20 +94,27 @@ class JsonSerializableAddressBook {
                 invalidCount++;
                 String personInfo = extractPersonInfoFromError(e.getMessage());
                 String reason = extractReasonFromError(e.getMessage());
+                String warningMsg = "[Entry " + entryNumber + "] INVALID SKIPPED - Reason: " + reason;
 
                 if (!personInfo.isEmpty()) {
-                    logger.warning("[Entry " + entryNumber + "] INVALID SKIPPED - Person: '" + personInfo
-                            + "' - Reason: " + reason);
-                } else {
-                    logger.warning("[Entry " + entryNumber + "] INVALID SKIPPED - Reason: " + reason);
+                    warningMsg = "[Entry " + entryNumber + "] INVALID SKIPPED - Person: '" + personInfo
+                            + "' - Reason: " + reason;
                 }
+
+                logger.warning(warningMsg);
+                warningMessages.add(warningMsg);
             }
         }
 
         // Log warning if limit was exceeded
         if (limitExceeded) {
-            logger.warning(MESSAGE_ENTRY_LIMIT_EXCEEDED + " Skipped " + skippedDueToLimit + " entries beyond limit.");
+            String limitWarning = MESSAGE_ENTRY_LIMIT_EXCEEDED + " Skipped " + skippedDueToLimit + " entries beyond limit.";
+            logger.warning(limitWarning);
+            warningMessages.add(limitWarning);
         }
+
+        // Store the warnings in the address book
+        addressBook.setStorageWarnings(warningMessages);
 
         // Log comprehensive summary
         StringBuilder summary = new StringBuilder();

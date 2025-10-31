@@ -2,6 +2,8 @@ package seedu.address;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -20,6 +22,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
+import seedu.address.model.StorageWarnings;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.AddressBookStorage;
@@ -81,6 +84,7 @@ public class MainApp extends Application {
         Optional<ReadOnlyAddressBook> addressBookOptional;
         ReadOnlyAddressBook initialData;
         boolean shouldSaveData = false; // Track if data needs to be saved
+        List<String> storageWarnings = new ArrayList<>(); // Store warnings locally
 
         try {
             addressBookOptional = storage.readAddressBook();
@@ -95,6 +99,9 @@ public class MainApp extends Application {
                 // File exists - use loaded data and save to clean duplicates/invalid entries
                 initialData = addressBookOptional.get();
                 shouldSaveData = true; // Save to clean any duplicates/invalid entries
+
+                // Display storage warnings in UI
+                displayStorageWarnings(initialData.getStorageWarnings());
             }
 
         } catch (DataLoadingException e) {
@@ -121,7 +128,23 @@ public class MainApp extends Application {
             }
         }
 
+        // Create model and set warnings
+        ModelManager modelManager = new ModelManager(initialData, userPrefs);
+        if (!storageWarnings.isEmpty()) {
+            modelManager.setStorageWarnings(storageWarnings);
+        }
+
         return new ModelManager(initialData, userPrefs);
+    }
+
+    /**
+     * Displays storage warnings in the application UI
+     */
+    private void displayStorageWarnings(List<String> warnings) {
+        if (warnings != null && !warnings.isEmpty()) {
+            // Store warnings to be displayed when UI is ready
+            StorageWarnings.setPendingWarnings(warnings);
+        }
     }
 
     /**

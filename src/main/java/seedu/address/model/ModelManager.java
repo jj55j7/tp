@@ -4,7 +4,9 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -25,12 +27,13 @@ public class ModelManager implements Model {
                     .thenComparing(p -> p.getName().toString());
     private static final Comparator<Person> ADDRESS_ASC =
             Comparator.comparing((
-                    Person p) -> p.getAddress() == null ? "" : tryGetAddressValue(p),
+                                    Person p) -> p.getAddress() == null ? "" : tryGetAddressValue(p),
                             String.CASE_INSENSITIVE_ORDER)
                     .thenComparing(p -> p.getAddress() == null ? "" : tryGetAddressValue(p));
     private final AddressBook addressBook;
     private final UserPrefs userPrefs;
     private final FilteredList<Person> filteredPersons;
+    private final List<String> storageWarnings = new ArrayList<>();
 
     /**
      * Initializes a ModelManager with the given addressBook and userPrefs.
@@ -180,6 +183,28 @@ public class ModelManager implements Model {
         return addressBook.equals(otherModelManager.addressBook)
                 && userPrefs.equals(otherModelManager.userPrefs)
                 && filteredPersons.equals(otherModelManager.filteredPersons);
+    }
+
+    /**
+     * Sets storage warnings from data loading process
+     */
+    public void setStorageWarnings(List<String> warnings) {
+        storageWarnings.clear();
+        storageWarnings.addAll(warnings);
+    }
+
+    /**
+     * Gets storage warnings from data loading process
+     */
+    public List<String> getStorageWarnings() {
+        return new ArrayList<>(storageWarnings);
+    }
+
+    /**
+     * Clears storage warnings after they've been displayed
+     */
+    public void clearStorageWarnings() {
+        storageWarnings.clear();
     }
 
 }
